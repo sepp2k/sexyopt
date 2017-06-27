@@ -147,7 +147,9 @@ trait SexyOpt {
     def usage: String = {
         val argsString = posArgs.map(" " + _.argString).mkString
         val options =
-            posArgs.map(arg => (arg.name, arg.description)) ++ longNames.values.map(arg => (arg.optString, arg.description))
+            posArgs.map(arg => (arg.name, arg.description)) ++
+                Seq("    --" -> "Treat all subsequent arguments as positional even if they start with a dash") ++
+                longNames.values.map(arg => (arg.optString, arg.description))
         // TODO: wrap around
         val optionDescriptions = options.map {
             case (optString, description) =>
@@ -167,9 +169,9 @@ trait SexyOpt {
         var infinitePosArgAssignedAtLeastOnce = false
         while (remainingArgs.nonEmpty) {
             val arg = remainingArgs.dequeue
-            if (arg == "--") {
+            if (arg == "--" && !ignoreDashes) {
                 ignoreDashes = true
-            } else if (arg.startsWith("--")) {
+            } else if (arg.startsWith("--") && !ignoreDashes) {
                 longNames.get(arg.substring(2)) match {
                     case Some(flag: Flag) =>
                         flag.callback()
@@ -179,7 +181,7 @@ trait SexyOpt {
                     case None =>
                         failWith(s"Unknown option $arg")
                 }
-            } else if (arg.startsWith("-")) {
+            } else if (arg.startsWith("-") && !ignoreDashes) {
                 arg.substring(1).toCharArray.foreach { c =>
                     shortNames.get(c) match {
                         case Some(flag: Flag) =>
@@ -211,7 +213,7 @@ trait SexyOpt {
 
     def failWith(message: String): Nothing = {
         System.err.println(message)
-        System.err.println("See --help for more information")
+        System.err.println(s"See $programName --help for more information")
         sys.exit(1)
     }
 }
