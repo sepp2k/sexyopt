@@ -1,6 +1,6 @@
 package sexyopt
 
-object Test extends SexyOpt {
+private object Test extends SexyOpt {
     override val programName = "test"
     override val programDescription = "A test program to test option parsing."
 

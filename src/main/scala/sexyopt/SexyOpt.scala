@@ -2,6 +2,9 @@ package sexyopt
 
 import scala.collection.mutable
 
+/**
+ * Mix-in this trait to define the command line options and arguments that your application takes.
+ */
 trait SexyOpt {
     private sealed abstract class NamedArg {
         val longName: String
@@ -16,11 +19,11 @@ trait SexyOpt {
     private case class Flag(longName: String, shortName: Option[Char], description: String, callback: () => Unit) extends NamedArg
     private case class StringOption(longName: String, shortName: Option[Char], description: String, callback: String => Unit) extends NamedArg
 
-    sealed abstract class Count(val suffix: String, val mustBeLast: Boolean, val infinite: Boolean)
-    case object ZeroOrOne extends Count("?", mustBeLast = true, infinite = false)
-    case object One extends Count("", mustBeLast = false, infinite = false)
-    case object ZeroOrMore extends Count("*", mustBeLast = true, infinite = true)
-    case object OneOrMore extends Count("+", mustBeLast = true, infinite = true)
+    private sealed abstract class Count(val suffix: String, val mustBeLast: Boolean, val infinite: Boolean)
+    private case object ZeroOrOne extends Count("?", mustBeLast = true, infinite = false)
+    private case object One extends Count("", mustBeLast = false, infinite = false)
+    private case object ZeroOrMore extends Count("*", mustBeLast = true, infinite = true)
+    private case object OneOrMore extends Count("+", mustBeLast = true, infinite = true)
 
     private case class Positional(name: String, description: String, count: Count, callback: String => Unit) {
         def mustBeLast = count.mustBeLast
@@ -40,8 +43,14 @@ trait SexyOpt {
     private val posArgs = mutable.ArrayBuffer[Positional]()
     private var initialized = false
 
+    /**
+     * A value provided by the user as a command line option or argument. Do not use until `parse` has been called.
+     */
     class Argument[T](init: T) {
         private var _value = init
+        /**
+         * The value provided by the user. Do not use until `parse` has been called.
+         */
         def value = {
             if(!initialized) throw new IllegalStateException("Argument has been accessed before parse method was called")
             _value
@@ -70,10 +79,25 @@ trait SexyOpt {
         arg
     }
 
+    /**
+     * Adds a flag (option without an argument).
+     *
+     * @param longName the long name of the flag. The flag can be activated via `--longName`
+     * @param shortName the single-character name of the flag. The flag can be activated via `-shortName`
+     * @param description the description that will be displayed for this flag in the `--help` message
+     * @return `true` if the flag has been used and `false` otherwise
+     */
     def flag(longName: String, shortName: Char, description: String): Argument[Boolean]  = {
         flag(longName, Some(shortName), description)
     }
 
+    /**
+     * Adds a flag (option without an argument).
+     *
+     * @param longName the long name of the flag. The flag can be activated via `--longName`
+     * @param description the description that will be displayed for this flag in the `--help` message
+     * @return `true` if the flag has been used and `false` otherwise
+     */
     def flag(longName: String, description: String): Argument[Boolean]  = {
         flag(longName, None, description)
     }
@@ -90,18 +114,50 @@ trait SexyOpt {
         arg
     }
 
+    /**
+     * Adds an option with an argument. The option's argument will be the token that follows the option on the command line.
+     *
+     * @param longName the long name of the option. The option can be activated via `--longName argument`
+     * @param shortName the single-character name of the option. The option can be activated via `-shortName argument`
+     * @param description the description that will be displayed for this option in the `--help` message
+     * @param default the value that is used when the user does not use this option
+     * @return the argument provided by the user or `default` if the user did not use this option
+     */
     def option(longName: String, shortName: Char, description: String, default: String): Argument[String]  = {
         option(longName, Some(shortName), description, default)
     }
 
+    /**
+     * Adds an option with an argument. The option's argument will be the token that follows the option on the command line.
+     *
+     * @param longName the long name of the option. The option can be activated via `--longName argument`
+     * @param shortName the single-character name of the option. The option can be activated via `-shortName argument`
+     * @param description the description that will be displayed for this option in the `--help` message
+     * @return the argument provided by the user wrapped in a `Some` or `None` if the user did not use this option
+     */
     def option(longName: String, shortName: Char, description: String): Argument[Option[String]]  = {
         option(longName, Some(shortName), description)
     }
 
+    /**
+     * Adds an option with an argument. The option's argument will be the token that follows the option on the command line.
+     *
+     * @param longName the long name of the option. The option can be activated via `--longName argument`
+     * @param description the description that will be displayed for this option in the `--help` message
+     * @param default the value that is used when the user does not use this option
+     * @return the argument provided by the user or `default` if the user did not use this option
+     */
     def option(longName: String, description: String, default: String): Argument[String]  = {
         option(longName, None, description, default)
     }
 
+    /**
+     * Adds an option with an argument. The option's argument will be the token that follows the option on the command line.
+     *
+     * @param longName the long name of the option. The option can be activated via `--longName argument`
+     * @param description the description that will be displayed for this option in the `--help` message
+     * @return the argument provided by the user wrapped in a `Some` or `None` if the user did not use this option
+     */
     def option(longName: String, description: String): Argument[Option[String]]  = {
         option(longName, None, description)
     }
@@ -113,24 +169,57 @@ trait SexyOpt {
         posArgs += Positional(arg.name, arg.description, arg.count, arg.callback)
     }
 
+    /**
+     * Adds a required positional argument. The order of positional arguments will be the order in which this
+     * method is called.
+     *
+     * @param name the name of this argument as it appears in the `--help` message
+     * @param description the description that will be displayed for this argument in the `--help` message
+     * @return the argument provided by the user
+     */
     def posArg(name: String, description: String): Argument[String]  = {
         val arg = new Argument[String]("")
         addPosArg(Positional(name, description, One, s => arg.value = s))
         arg
     }
 
+    /**
+     * Adds an optional positional argument. The order of positional arguments will be the order in which this
+     * method is called. No other positional argument may be added after this one.
+     *
+     * @param name the name of this argument as it appears in the `--help` message
+     * @param description the description that will be displayed for this argument in the `--help` message
+     * @param default the value that is used when the user does not use this option
+     * @return the argument provided by the user if there is one or `default` otherwise
+     */
     def optionalPosArg(name: String, description: String, default: String): Argument[String]  = {
         val arg = new Argument[String](default)
         addPosArg(Positional(name, description, ZeroOrOne, s => arg.value = s))
         arg
     }
 
+    /**
+     * Adds an optional positional argument. The order of positional arguments will be the order in which this
+     * method is called. No other positional argument may be added after this one.
+     *
+     * @param name the name of this argument as it appears in the `--help` message
+     * @param description the description that will be displayed for this argument in the `--help` message
+     * @return the argument provided by the user wrapped in a `Some` if there is one or `None` otherwise
+     */
     def optionalPosArg(name: String, description: String): Argument[Option[String]]  = {
         val arg = new Argument[Option[String]](None)
         addPosArg(Positional(name, description, ZeroOrOne, s => arg.value = Some(s)))
         arg
     }
 
+    /**
+     * Eats up all remaining positional arguments. No other positional argument may be added after this one.
+     *
+     * @param name the name of this argument as it appears in the `--help` message
+     * @param description the description that will be displayed for this argument in the `--help` message
+     * @param atLeastOnce `false` if no arguments may be provided, `true` if at least one has to be provided
+     * @return the argument provided by the user if there is one or `default` otherwise
+     */
     def restArgs(name: String, description: String, atLeastOne: Boolean): Argument[Seq[String]] = {
         val args = mutable.ArrayBuffer[String]()
         val count = if (atLeastOne) OneOrMore else ZeroOrMore
@@ -138,16 +227,35 @@ trait SexyOpt {
         new Argument(args)
     }
 
+    /**
+     * Override this to change the indentation of the options in the `--help` message
+     */
     val optionIndentation = 2
-    val optionDescriptionOffset = 20
-    val totalLength = 80
-    final val optionLength = optionDescriptionOffset - optionIndentation
-    final val optionDescriptionLength = totalLength - optionDescriptionOffset
 
+    /**
+     * Override this to change the start of the second column in the `--help` message
+     */
+    val optionDescriptionOffset = 20
+
+    /**
+     * Override this to change the width at which the `--help` message is wrapped (not currently implemented)
+     */
+    val totalLength = 80
+
+    private final val optionLength = optionDescriptionOffset - optionIndentation
+    private final val optionDescriptionLength = totalLength - optionDescriptionOffset
+
+    /**
+     * The name of this program as displayed in the usage section of the `--help` message
+     */
     def programName: String
+
+    /**
+     * The description of this program that is displayed in the `--help` message
+     */
     def programDescription: String
 
-    def usage: String = {
+    private def usage: String = {
         val argsString = posArgs.map(" " + _.argString).mkString
         val options =
             posArgs.map(arg => (arg.name, arg.description)) ++
@@ -165,6 +273,9 @@ trait SexyOpt {
         s"Usage: $programName OPTION*$argsString\n$programDescription\n\nOptions:\n$optionDescriptions"
     }
 
+    /**
+     * Parses the given list of command line arguments and sets the defined arguments accordingly.
+     */
     def parse(args: Array[String]): Unit = {
         if (initialized) throw new IllegalStateException("More than one call to parse method")
         initialized = true
@@ -216,6 +327,13 @@ trait SexyOpt {
         }
     }
 
+    /**
+     * Override this to change what happens when the given command line is not valid (for example because
+     * arguments are missing or there are too many).
+     *
+     * By default this displays the given message (plus a reminder to use `--help` for more information) to
+     * stderr and exits the process with exit code 1.
+     */
     def failWith(message: String): Nothing = {
         System.err.println(message)
         System.err.println(s"See $programName --help for more information")
