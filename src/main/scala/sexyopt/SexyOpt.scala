@@ -1,5 +1,6 @@
 package sexyopt
 
+import scala.language.implicitConversions
 import scala.collection.mutable
 
 /**
@@ -58,7 +59,11 @@ trait SexyOpt {
         private[SexyOpt] def value_=(newValue: T) = {
             _value = newValue
         }
+
+        override def toString = value.toString
     }
+
+    implicit def getArgumentValue[T](arg: Argument[T]): T = arg.value
 
     private def addNamedArg(arg: NamedArg) = {
         if(longNames.isDefinedAt(arg.longName)) {

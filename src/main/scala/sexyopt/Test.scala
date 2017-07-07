@@ -16,11 +16,12 @@ private object Test extends SexyOpt {
 
     def main(args: Array[String]) = {
         parse(args)
-        println(s"fileName = ${fileName.value}")
-        println(s"stuff = ${stuff.value}")
-        println(s"someOption = ${someOption.value}")
-        println(s"someDef = ${someDef.value}")
-        println(s"aFlag = ${aFlag.value}")
-        println(s"anotherFlag = ${anotherFlag.value}")
+        println(s"fileName = $fileName")
+        println(s"stuff = $stuff")
+        println(someOption.map("someOption = " + _).getOrElse("someOption has not been provided"))
+        println(s"someDef = $someDef")
+        if (aFlag) println("aFlag has been provided")
+        else println("aFlag has not been provided")
+        println(s"anotherFlag = anotherFlag")
     }
 }
