@@ -38,12 +38,15 @@ trait SexyOpt {
     private val longNames = mutable.Map[String, NamedArg]("help" -> helpOption)
     private val shortNames = mutable.Map[Char, NamedArg]('h' -> helpOption)
     private val posArgs = mutable.ArrayBuffer[Positional]()
+    private var initialized = false
 
     class Argument[T](init: T) {
         private var _value = init
-        var isSet = false
-        def value = _value
-        def value_=(newValue: T) = {
+        def value = {
+            if(!initialized) throw new IllegalStateException("Argument has been accessed before parse method was called")
+            _value
+        }
+        private[SexyOpt] def value_=(newValue: T) = {
             _value = newValue
         }
     }
@@ -163,6 +166,8 @@ trait SexyOpt {
     }
 
     def parse(args: Array[String]): Unit = {
+        if (initialized) throw new IllegalStateException("More than one call to parse method")
+        initialized = true
         val remainingArgs = mutable.Queue(args: _*)
         val remainingPosArgs = mutable.Queue(posArgs: _*)
         var ignoreDashes = false
