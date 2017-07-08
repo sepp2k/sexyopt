@@ -2,7 +2,7 @@ name := "sexyopt"
 
 organization := "com.github.sepp2k"
 
-version := "0.1-SNAPSHOT"
+version := "0.1"
 
 scalaVersion := "2.12.1"
 
