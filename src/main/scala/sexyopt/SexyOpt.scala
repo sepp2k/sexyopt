@@ -222,7 +222,7 @@ trait SexyOpt {
      *
      * @param name the name of this argument as it appears in the `--help` message
      * @param description the description that will be displayed for this argument in the `--help` message
-     * @param atLeastOnce `false` if no arguments may be provided, `true` if at least one has to be provided
+     * @param atLeastOne `false` if no arguments may be provided, `true` if at least one has to be provided
      * @return the argument provided by the user if there is one or `default` otherwise
      */
     def restArgs(name: String, description: String, atLeastOne: Boolean): Argument[Seq[String]] = {
