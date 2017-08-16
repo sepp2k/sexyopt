@@ -169,7 +169,7 @@ trait SexyOpt {
 
     private def addPosArg(arg: Positional) = {
         if(posArgs.nonEmpty && posArgs.last.mustBeLast) {
-            throw(new IllegalStateException("There can't be more than one optional or variadic positional argument"))
+            throw new IllegalStateException("There can't be more than one optional or variadic positional argument")
         }
         posArgs += Positional(arg.name, arg.description, arg.count, arg.callback)
     }
@@ -318,7 +318,7 @@ trait SexyOpt {
                 if (remainingPosArgs.isEmpty) {
                     failWith("Too many arguments.")
                 }
-                val posArg = remainingPosArgs(0)
+                val posArg = remainingPosArgs.head
                 posArg.callback(arg)
                 if(posArg.count.infinite) {
                     infinitePosArgAssignedAtLeastOnce = true
@@ -327,8 +327,8 @@ trait SexyOpt {
                 }
             }
         }
-        if (remainingPosArgs.nonEmpty && remainingPosArgs(0).required && !infinitePosArgAssignedAtLeastOnce) {
-            failWith(s"Missing value for ${remainingPosArgs(0).name}.")
+        if (remainingPosArgs.nonEmpty && remainingPosArgs.head.required && !infinitePosArgAssignedAtLeastOnce) {
+            failWith(s"Missing value for ${remainingPosArgs.head.name}.")
         }
     }
 
