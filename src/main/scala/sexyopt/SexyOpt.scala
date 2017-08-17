@@ -39,6 +39,7 @@ trait SexyOpt {
         println(usage)
         sys.exit(0)
     })
+
     private val longNames = mutable.Map[String, NamedArg]("help" -> helpOption)
     private val shortNames = mutable.Map[Char, NamedArg]('h' -> helpOption)
     private val posArgs = mutable.ArrayBuffer[Positional]()
@@ -256,6 +257,11 @@ trait SexyOpt {
     def programName: String
 
     /**
+      * Override this to set a version number that can be printed using --version
+      */
+    val version: Option[String] = None
+
+    /**
      * The description of this program that is displayed in the `--help` message
      */
     def programDescription: String
@@ -285,6 +291,14 @@ trait SexyOpt {
     def parse(args: Array[String]): Unit = {
         if (initialized) throw new IllegalStateException("More than one call to parse method")
         initialized = true
+
+        version.foreach { v =>
+            longNames("version") = Flag("version", None, "Display version information and exit", () => {
+                println(s"$programName $v")
+                sys.exit(0)
+            })
+        }
+
         val remainingArgs = mutable.Queue(args: _*)
         val remainingPosArgs = mutable.Queue(posArgs: _*)
         var ignoreDashes = false

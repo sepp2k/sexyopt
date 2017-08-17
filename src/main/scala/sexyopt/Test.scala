@@ -2,6 +2,7 @@ package sexyopt
 
 private object Test extends SexyOpt {
     override val programName = "test"
+    override val version = Some("1.2.3")
     override val programDescription = "A test program to test option parsing."
 
     val fileName = posArg("filename", "The name of the file to ignore")
