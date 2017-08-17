@@ -266,13 +266,14 @@ trait SexyOpt {
             posArgs.map(arg => (arg.name, arg.description)) ++
                 Seq("    --" -> "Treat all subsequent arguments as positional even if they start with a dash") ++
                 longNames.values.map(arg => (arg.optString, arg.description))
-        // TODO: wrap around
         val optionDescriptions = options.map {
             case (optString, description) =>
+                val wrappedDescription =
+                    TextWrap.wrap(description, optionDescriptionLength).mkString(" " * optionDescriptionOffset)
                 if (optString.length < optionLength) {
-                    " " * optionIndentation + optString + " " * (optionLength - optString.length) + description
+                    " " * optionIndentation + optString + " " * (optionLength - optString.length) + wrappedDescription
                 } else {
-                    " " * optionIndentation + optString + "\n" + " " * optionDescriptionOffset + description
+                    " " * optionIndentation + optString + "\n" + " " * optionDescriptionOffset + wrappedDescription
                 }
         }.mkString("\n")
         s"Usage: $programName OPTION*$argsString\n$programDescription\n\nOptions:\n$optionDescriptions"

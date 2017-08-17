@@ -9,7 +9,10 @@ private object Test extends SexyOpt {
     // val stuff = restArgs("stuff", "Other stuff", atLeastOne = true)
     // val stuff = optionalPosArg("stuff", "Other stuff")
     val stuff = optionalPosArg("stuff", "Other stuff", "default stuff")
-    val someOption = option("some-option", 's', "Some option")
+    val someOption = option("some-option", 's',
+        """Some option, which has a very long description with paragraphs and everything.
+        |
+        |Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.""".stripMargin)
     val someDef = option("some-def", "Some option with default", default = "the default")
     val aFlag = flag("a-flag", 'f', "A very important flag")
     val anotherFlag = flag("another-flag", "A less important flag")
